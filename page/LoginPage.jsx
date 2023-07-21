@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, useColorScheme } from 'react-native';
-import { useTheme,useNavigation  } from '@react-navigation/native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { useTheme, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import axios from 'axios'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,20 +16,19 @@ const LoginPage = () => {
   const handleLogin = async () => {
     try {
       setError('');
-      const response = await axios.post('http://10.74.3.97:3000/api/auth/login', { email, motDePasse });
+      const response = await axios.post('http://192.168.1.62:3000/api/auth/login', { email, motDePasse });
       const token = response.data.token;
       const role = response.data.role;
 
-      if (token ) {
+      if (token) {
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('role', role);
-
         if (role === 'RH') {
           navigation.navigate('RH');
         } else if (role === 'Docteur') {
           navigation.navigate('Medecin');
-        }else if (role === 'Administrateur') {
-          navigation.navigate('RH');
+        } else if (role === 'Administrateur') {
+          navigation.navigate('Admin');
         }
       } else {
         setError('Nom d\'utilisateur ou mot de passe incorrect');
@@ -39,6 +38,7 @@ const LoginPage = () => {
       console.error(error);
     }
   };
+
   const backgroundColor = isDarkMode ? '#121212' : colors.background;
   const caretColor = isDarkMode ? 'white' : 'black';
   const isemailEmpty = email === '';
@@ -56,9 +56,10 @@ const LoginPage = () => {
         </View>
 
         <Text style={[styles.title, { color: colors.text }]}>Login</Text>
+        {error !== '' && <Text style={styles.errorText}>{error}</Text>}
         <View style={[
           styles.inputContainer,
-          { borderColor: isemailEmpty ? 'red' : 'lightblue' }
+          { borderColor: isemailEmpty || error !== '' ? 'red' : 'lightblue' }
         ]}>
           <TextInput
             style={[styles.input, { color: colors.text }]}
@@ -69,9 +70,10 @@ const LoginPage = () => {
             caretColor={caretColor} 
           />
         </View>
+
         <View style={[
           styles.inputContainer,
-          { borderColor: ismotDePasseEmpty ? 'red' : 'lightblue' }
+          { borderColor: ismotDePasseEmpty || error !== '' ? 'red' : 'lightblue' }
         ]}>
           <TextInput
             style={[styles.input, { color: colors.text }]}
@@ -83,6 +85,7 @@ const LoginPage = () => {
             caretColor={caretColor} 
           />
         </View>
+
         <TouchableOpacity
           style={[styles.loginButton, { backgroundColor: 'lightblue' }]}
           onPress={handleLogin}
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   imageContainer: {
-    marginTop:90,
+    marginTop: 90,
     borderRadius: 100,
     overflow: 'hidden',
     width: 200,
@@ -149,6 +152,11 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    marginBottom: 8,
   },
 });
 
