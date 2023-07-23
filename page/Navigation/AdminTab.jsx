@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import AdminAccueil from '../Admin/AdminAccueil';
 import Deconnexion from './Deconnexion';
+import ListeUsers from '../ListeUsers';
+import RegisterUsers from '../RegisterUsers';
 const Tab = createMaterialTopTabNavigator();
 
 const AdminTab= () => {
@@ -15,6 +17,8 @@ const AdminTab= () => {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('role');
+      await AsyncStorage.removeItem('nom');
       navigation.reset({
         index: 0,
         routes: [{ name: 'MainTab' }],
@@ -44,6 +48,34 @@ const AdminTab= () => {
             />
           ),
           tabBarLabel: 'Home',
+        }}
+      />
+      <Tab.Screen
+        name="Liste"
+        component={ListeUsers}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'format-list-bulleted' : 'format-list-bulleted-type'}
+              size={26}
+              color={color}
+            />
+          ),
+          tabBarLabel: 'Liste',
+        }}
+      />
+      <Tab.Screen
+        name="Register"
+        component={RegisterUsers}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'pencil' : 'pencil-outline'}
+              size={26}
+              color={color}
+            />
+          ),
+          tabBarLabel: 'Register',
         }}
       />
        <Tab.Screen

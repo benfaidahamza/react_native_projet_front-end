@@ -7,7 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Deconnexion from './Deconnexion';
 import MedecinAccueil from '../Medecin/MedecinAccueil';
+import PatientPage from '../PatientPage';
 const Tab = createMaterialTopTabNavigator();
+
 
 const MedecinTab = () => {
   const { colors } = useTheme();
@@ -16,6 +18,8 @@ const MedecinTab = () => {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('role');
+      await AsyncStorage.removeItem('nom');
       navigation.reset({
         index: 0,
         routes: [{ name: 'MainTab' }],
@@ -45,6 +49,20 @@ const MedecinTab = () => {
             />
           ),
           tabBarLabel: 'Home',
+        }}
+      />
+      <Tab.Screen
+        name="Liste"
+        component={PatientPage}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'format-list-bulleted' : 'format-list-bulleted-type'}
+              size={26}
+              color={color}
+            />
+          ),
+          tabBarLabel: 'liste',
         }}
       />
        <Tab.Screen

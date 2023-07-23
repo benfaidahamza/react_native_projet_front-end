@@ -1,99 +1,170 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, FlatList } from 'react-native';
+import React, { useState,useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, FlatList, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { RadioButton as PaperRadioButton } from 'react-native-paper';
-import { Picker } from '@react-native-picker/picker';
-const patientData = {
-  "nom": "Dupont",
-  "prenom": "Jean",
-  "age": 35,
-  "poids": 70,
-  "taille": 180,
-  "traitements": [
-    {
-      "nom": "Paracétamol",
-      "duree": 7,
-      "fois_par_jour": 3
-    },
-    {
-      "nom": "Ibuprofène",
-      "duree": 5,
-      "fois_par_jour": 2
-    }
-  ]
-};
+import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
-export default function RegisterPage() {
-    const [patientName, setPatientName] = useState(`${patientData.prenom} ${patientData.nom}`);
-    const [email, setEmail] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [medicationName, setMedicationName] = useState(patientData.traitements[0].nom);
-    const [usageDuration, setUsageDuration] = useState(`${patientData.traitements[0].duree}`);
-    const [usagePerDay, setUsagePerDay] = useState(`${patientData.traitements[0].fois_par_jour}`);
-    const [selectedTreatment, setSelectedTreatment] = useState(0);
-    const [treatmentsData, setTreatmentsData] = useState(patientData.traitements.map(treatment => ({
-      nom: treatment.nom,
-      duree: treatment.duree.toString(),
-      fois_par_jour: treatment.fois_par_jour.toString()
-    })));
-    const [weight, setWeight] = useState(`${patientData.poids}`);
-    const [height, setHeight] = useState(`${patientData.taille}`);
-    const [age, setAge] = useState(`${patientData.age}`);
-    const [gender, setGender] = useState('male'); // Initially select male as the default gender
-  
-    const handleGenderChange = (newGender) => {
-      setGender(newGender);
-    };
-  
-    const handleAddTreatment = () => {
+
+
+export default function RegisterPage({route}) {
+  const { patientId } = route.params || { patientId: '' };
+  console.log({ patientId })
+   const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [treatmentsData, setTreatmentsData] = useState([]);
+  const [weight, setWeight] = useState('');
+  const [height, setHeight] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    axios
+      .get(`http://192.168.1.178:3000/api/patients/${patientId}`)
+      .then((response) => {
+        const patientDataFromServer = response.data;
+        setNom(patientDataFromServer.nom);
+        setPrenom(patientDataFromServer.prenom);
+        setEmail(patientDataFromServer.email);
+        setTreatmentsData(
+          patientDataFromServer.traitements.map((treatment) => ({
+            nom: treatment.nom,
+            duree: treatment.duree.toString(),
+            fois_par_jour: treatment.fois_par_jour.toString(),
+          }))
+        );
+        setWeight(patientDataFromServer.poids.toString());
+        setHeight(patientDataFromServer.taille.toString());
+        setAge(patientDataFromServer.age.toString());
+        setGender(patientDataFromServer.sexe);
+        console.log('Patient Data:', response.data);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching patient data:', error);
+        setError('Error fetching patient data');
+        setIsLoading(false);
+      });
+  }, [patientId]);
+  const navigateToListPage = () => {
+    navigation.navigate('Medecin');
+  };
+  const handleGenderChange = (newGender) => {
+    setGender(newGender);
+  };
+  console.log(prenom)
+
+  const handleAddTreatment = () => {
+    if (newTreatment.nom && newTreatment.duree && newTreatment.fois_par_jour) {
       setTreatmentsData([...treatmentsData, newTreatment]);
+      setNewTreatment({
+        nom: '',
+        duree: '',
+        fois_par_jour: ''
+      }); 
       setModalVisible(false);
+    } else {
+      Alert.alert('Error', 'Please fill all fields in the new treatment.');
+    }
+  };
+
+  const handleValidate = async () => {
+    const formData = {
+      nom: nom,
+      prenom: prenom,
+      email: email,
+      traitements:treatmentsData.map(treatment => ({
+        nom: treatment.nom,
+        duree: treatment.duree,
+        fois_par_jour: treatment.fois_par_jour,
+      })),
+      sexe: gender,
+      age: age,
     };
   
-    const handleValidate = () => {
-      // Implement your validation logic here
-      console.log('Patient Name:', patientName);
-      console.log('Email:', email);
-      console.log('Phone Number:', phoneNumber);
-      console.log('Medication Name:', medicationName);
-      console.log('Usage Duration:', usageDuration);
-      console.log('Usage Per Day:', usagePerDay);
-      console.log('Selected Treatments:', treatmentsData.map(treatment => treatment.nom));
-      console.log('Gender:', gender);
-    };
-  
-    const renderItem = ({ item }) => {
-      return (
-        <Text style={styles.selectedTreatmentText}>
-          {item.nom}
-        </Text>
-      );
-    };
-  
-    const [modalVisible, setModalVisible] = useState(false);
-    const [newTreatment, setNewTreatment] = useState({
-      nom: '',
-      duree: '',
-      fois_par_jour: ''
-    });
+    try {
+      const storedToken = await AsyncStorage.getItem('token');
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      const response = await axios.put(`http://192.168.1.178:3000/api/patients/${patientId}`, formData);
+      console.log('Data updated successfully!', response.data);
+    } catch (error) {
+      console.error('Error updating data:', error);
+    }
+    console.log(JSON.stringify(formData, null, 2));
+  };
+
+  const renderItem = ({ item }) => {
+    return (
+      <Text style={styles.selectedTreatmentText}>
+        {item.nom}
+      </Text>
+    );
+  };
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newTreatment, setNewTreatment] = useState({
+    nom: '',
+    duree: '',
+    fois_par_jour: ''
+  });
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>fiche patient </Text>
+      <Text style={styles.title}>Fiche Patient</Text>
+      
+    
       <View style={styles.inputContainer}>
         <Icon name="user" size={20} color="black" style={styles.icon} />
         <TextInput
           style={styles.input}
-          placeholder="Patient Name"
-          value={patientName}
-          onChangeText={setPatientName}
+          placeholder="Nom"
+          value={nom}
+          onChangeText={setNom}
         />
       </View>
-      {/* ... Other input fields ... */}
-      <View style={styles.radioContainer}>
-        {/* ... Radio buttons ... */}
+      <View style={styles.inputContainer}>
+        <Icon name="user" size={20} color="black" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Prénom"
+          value={prenom}
+          onChangeText={setPrenom}
+          editable={false}
+        />
       </View>
-      {/* ... Other input fields ... */}
+      <View style={styles.inputContainer}>
+        <Icon name="envelope" size={20} color="black" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          editable={false}
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Icon name="calendar" size={20} color="black" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Age"
+          value={age}
+          onChangeText={setAge}
+        />
+      </View>
+      <View style={styles.inputContainer}>
+        <Icon name="phone" size={20} color="black" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone Number"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+        />
+      </View>
       <TouchableOpacity style={styles.addTreatmentButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.addTreatmentButtonText}>Add Treatment</Text>
       </TouchableOpacity>
@@ -154,16 +225,20 @@ export default function RegisterPage() {
           </View>
         </View>
       </Modal>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={[styles.validateButton, { marginRight: 10 }]} onPress={handleValidate}>
+          <Icon name="check" size={20} color="white" style={styles.validateButtonIcon} />
+          <Text style={styles.validateButtonText}>Validate</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.validateButton, { marginLeft: 10 }]} onPress={navigateToListPage}>
+          <Icon name="list" size={20} color="white" style={styles.validateButtonIcon} />
+          <Text style={styles.validateButtonText}>Go to List</Text>
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity style={styles.validateButton} onPress={handleValidate}>
-        <Icon name="check" size={20} color="white" style={styles.validateButtonIcon} />
-        <Text style={styles.validateButtonText}>Validate</Text>
-      </TouchableOpacity>
     </View>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -196,6 +271,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 5,
   },
+  buttonContainer: {
+    flexDirection: 'row',
+  },
   inputContainer: {
     marginBottom: 16,
     flexDirection: 'row',
@@ -205,6 +283,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   input: {
+    color :'black',
     flex: 1,
     height: 40,
     paddingHorizontal: 10,
@@ -251,6 +330,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft:'10'
   },
   validateButtonIcon: {
     marginRight: 8,
@@ -260,8 +340,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-   // Modal styles
-   modalContainer: {
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  patientImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  // Modal styles
+  modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

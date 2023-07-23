@@ -6,13 +6,14 @@ import HomePage from './page/HomePage';
 import LoginPage from './page/LoginPage';
 import PatientPage from './page/PatientPage';
 import RegisterPage from './page/RegisterPage';
-import MedecinAccueil from './page/Medecin/MedecinAccueil';
 import { useTheme } from '@react-navigation/native';
-import AdminAccueil from './page/Admin/AdminAccueil';
 import MedecinTab from './page/Navigation/MedecinTab';
 import Deconnexion from './page/Navigation/Deconnexion';
 import RhTab from './page/Navigation/RhTab';
 import AdminTab from './page/Navigation/AdminTab';
+import ScanCode from './page/ScanCode';
+import RegisterUsers from './page/RegisterUsers';
+
 
 const Tab = createMaterialTopTabNavigator();
 const Stack = createStackNavigator();
@@ -107,6 +108,9 @@ const TabScreen = () => {
       <Stack.Screen name="Medecin" component={MedecinTab} />
       <Stack.Screen name="Admin" component={AdminTab} />
       <Stack.Screen name="Deconnexion" component={Deconnexion} />
+      <Stack.Screen name="Register" component={RegisterPage}/>
+      <Stack.Screen name="RegisterAdmin" component={RegisterUsers}/>
+      <Stack.Screen name="Scan" component={ScanCode}/>
     </Stack.Navigator>
   );
 };

@@ -16,13 +16,16 @@ const LoginPage = () => {
   const handleLogin = async () => {
     try {
       setError('');
-      const response = await axios.post('http://192.168.1.62:3000/api/auth/login', { email, motDePasse });
+      const response = await axios.post('http://192.168.1.178:3000/api/auth/login', { email, motDePasse });
       const token = response.data.token;
       const role = response.data.role;
+      const nom = response.data.nom;
 
       if (token) {
+        console.log(token);
         await AsyncStorage.setItem('token', token);
         await AsyncStorage.setItem('role', role);
+        await AsyncStorage.setItem('nom', nom);
         if (role === 'RH') {
           navigation.navigate('RH');
         } else if (role === 'Docteur') {

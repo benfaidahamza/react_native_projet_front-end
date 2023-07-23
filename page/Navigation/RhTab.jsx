@@ -6,6 +6,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import RhAccueil from '../Rh/RhAccueil';
 import Deconnexion from './Deconnexion';
+import ScanCode from '../ScanCode';
+import PatientPage from '../PatientPage';
+
 const Tab = createMaterialTopTabNavigator();
 
 const RhTab = () => {
@@ -15,6 +18,8 @@ const RhTab = () => {
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('role');
+      await AsyncStorage.removeItem('nom');
       navigation.reset({
         index: 0,
         routes: [{ name: 'MainTab' }],
@@ -45,6 +50,34 @@ const RhTab = () => {
           ),
           tabBarLabel: 'Home',
         }}
+      />
+      <Tab.Screen
+        name="Liste"
+        component={PatientPage}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialCommunityIcons
+              name={focused ? 'format-list-bulleted' : 'format-list-bulleted-type'}
+              size={26}
+              color={color}
+            />
+          ),
+          tabBarLabel: 'liste',
+        }}
+      />
+      <Tab.Screen
+        name="Scan"
+        component={ScanCode}
+        options={{
+          tabBarIcon: ({ focused, color }) => (
+            <MaterialCommunityIcons
+              name="qrcode-scan"
+              size={26}
+              color={color}
+            />
+          ),
+          tabBarLabel: 'Scan'
+       }}
       />
        <Tab.Screen
         name="Deconnexion"
